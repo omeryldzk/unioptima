@@ -40,6 +40,7 @@ public class BaseRankingMetadataServiceImpl implements BaseRankingMetadataServic
 
     // --- Public Access Methods ---
 
+    @Override
     public List<String> getFeatures() {
         return cachedFeatures;
     }

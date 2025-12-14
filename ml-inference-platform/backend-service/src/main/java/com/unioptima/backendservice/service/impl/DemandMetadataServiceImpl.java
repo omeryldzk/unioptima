@@ -48,6 +48,7 @@ public class DemandMetadataServiceImpl implements DemandMetadataService {
 
     // --- Public Access Methods ---
 
+    @Override
     public List<String> getFeatures() {
         return cachedFeatures;
     }
@@ -55,6 +56,7 @@ public class DemandMetadataServiceImpl implements DemandMetadataService {
     /**
      * High-performance check if an ID exists in the main list.
      */
+    @Override
     public boolean isMainId(String idOSYM) {
         return cachedMainIds.contains(idOSYM);
     }

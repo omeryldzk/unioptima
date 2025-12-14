@@ -36,7 +36,7 @@ public class EncodedDemandDataRepositoryCustom implements EncodedDemandDataRepos
         // Always include _id so the object is valid
         query.fields().include("_id");
         query.fields().include("idOSYM");
-        query.fields().include("current_academicYear");
+        query.fields().include("academicYear");
 
         // Add dynamic features requested by metadata
         if (features != null) {

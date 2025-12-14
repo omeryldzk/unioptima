@@ -28,6 +28,9 @@ public class DemandServiceImpl implements DemandService {
     public List<Double> getModelFeatures(String idOSYM) {
         var features = metadataService.getFeatures();
         var doc =  encodedDataRepository.findLatestWithSelectedFeatures(idOSYM, features);
+        if (doc == null) {
+            throw new RuntimeException("No EncodedDemandData found for idOSYM: " + idOSYM);
+        }
         return extractFeatureVector(doc, features);
     }
 

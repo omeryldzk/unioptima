@@ -1,0 +1,51 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+venv/
+.venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Docker
+.docker/
+
+# Models (Large files)
+*.bin
+*.h5
+*.onnx
+*.pt
+*.pth
+/inference-service/app/models/
+# Keep gitignore in models dir if it exists to preserve dir structure, but ignore contents
+!/inference-service/app/models/.gitkeep
+
+# Other
+.agent/
+.gemini/

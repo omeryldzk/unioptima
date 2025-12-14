@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  inference-service:
+    build:
+      context: ./inference-service
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    volumes:
+      # Mount proto for generation/access if needed, or build time copy
+      - ./proto:/app/proto
+    environment:
+      - ML_GRPC_PORT=50051
+    command: >
+      sh -c "python -m grpc_tools.protoc -I/app/proto --python_out=/app/app --grpc_python_out=/app/app /app/proto/inference.proto &&
+             python -m app.main"
+
+  backend-service:
+    build:
+      context: ./backend-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=${ATLAS_URI}
+      - INFERENCE_SERVICE_HOST=inference-service
+      - INFERENCE_SERVICE_PORT=50051
+    depends_on:
+      - inference-service
+

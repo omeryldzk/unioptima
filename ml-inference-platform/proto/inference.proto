@@ -1,0 +1,22 @@
+syntax = "proto3";
+package inference;
+
+service ModelService {
+  rpc PredictBaseRanking (BaseRankingRequest) returns (PredictionResponse);
+  rpc PredictDemand (DemandRequest) returns (PredictionResponse);
+}
+
+message BaseRankingRequest {
+  string uni_cluster_id = 1;
+  string prog_cluster_id = 2;
+  repeated double features = 3;
+}
+
+message DemandRequest {
+  bool use_fallback = 1;
+  repeated double features = 2;
+}
+
+message PredictionResponse {
+  repeated double predictions = 1;
+}

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface EncodedDemandDataRepository extends MongoRepository<EncodedDemandData, String>, EncodedDemandDataRepositoryCustomInterface {
+public interface EncodedDemandDataRepository extends MongoRepository<EncodedDemandData, String>, EncodedDemandDataRepositoryCustom {
 
     /**
      * Finds the latest data entry for a specific Program ID.

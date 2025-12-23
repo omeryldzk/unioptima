@@ -1,8 +1,5 @@
 package com.unioptima.backendservice.repository.custom;
 
-import com.unioptima.backendservice.model.EncodedBaseRankingData;
-import com.unioptima.backendservice.model.EncodedDemandData;
-import com.unioptima.backendservice.repository.EncodedBaseRankingDataRepositoryCustomInterface;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Query;
@@ -13,11 +10,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import java.util.List;
 
 @Repository
-public class EncodedBaseRankingDataRepositoryCustom implements EncodedBaseRankingDataRepositoryCustomInterface {
+public class EncodedBaseRankingDataRepositoryCustomImpl implements com.unioptima.backendservice.repository.EncodedBaseRankingDataRepositoryCustom {
 
     private final MongoTemplate mongoTemplate;
 
-    public EncodedBaseRankingDataRepositoryCustom(MongoTemplate mongoTemplate) {
+    public EncodedBaseRankingDataRepositoryCustomImpl(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
     @Override

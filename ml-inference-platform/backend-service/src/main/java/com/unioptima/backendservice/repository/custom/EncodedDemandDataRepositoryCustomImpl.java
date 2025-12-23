@@ -1,7 +1,5 @@
 package com.unioptima.backendservice.repository.custom;
 
-import com.unioptima.backendservice.model.EncodedDemandData;
-import com.unioptima.backendservice.repository.EncodedDemandDataRepositoryCustomInterface;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -12,11 +10,11 @@ import java.util.List;
 
 
 @Repository
-public class EncodedDemandDataRepositoryCustom implements EncodedDemandDataRepositoryCustomInterface {
+public class EncodedDemandDataRepositoryCustomImpl implements com.unioptima.backendservice.repository.EncodedDemandDataRepositoryCustom {
 
     private final MongoTemplate mongoTemplate;
 
-    public EncodedDemandDataRepositoryCustom(MongoTemplate mongoTemplate) {
+    public EncodedDemandDataRepositoryCustomImpl(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 

@@ -45,6 +45,11 @@ public class BaseRankingMetadataServiceImpl implements BaseRankingMetadataServic
         return cachedFeatures;
     }
 
+    @Override
+    public int getFeatureCount() {
+        return cachedFeatures.size();
+    }
+
     /**
      * Optional: Call this if you manually update the DB and need to refresh the
      * cache

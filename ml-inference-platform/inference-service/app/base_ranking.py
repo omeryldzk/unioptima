@@ -1,27 +1,31 @@
+import numpy as np # Ensure numpy is imported
 from app.model_registry import ModelRegistry
 
-def predict_ranking(uni_cluster_id: str, prog_cluster_id: str, features: list[float]) -> list[float]:
+
+def predict_ranking(uni_cluster_id: str, prog_cluster_id: str, features: list[float]) -> float:
     registry = ModelRegistry()
     
-    # 1. Scale features once
+    # The scaler expects shape (n_samples, n_features)
+    # We convert the list [f1, f2...] into [[f1, f2...]]
+    features_2d = np.array(features).reshape(1, -1)
+    
+    # 1. Scale features
     scaler = registry.get_scaler('base_scaler')
-    scaled_features = scaler.transform(features)
+    scaled_features = scaler.transform(features_2d)
     
     # 2. Run Uni + Prog cluster models
-    # Fetch models dynamically based on cluster IDs
     uni_model = registry.get_uni_model(uni_cluster_id)
     prog_model = registry.get_prog_model(prog_cluster_id)
     
+    # Fallback if models are missing
     if uni_model is None or prog_model is None:
-        # Fallback or error handling
-        # For now, returning 0.0s if model not found for specific cluster
-        return [0.0] * len(features)
+        return 0.0
     
-    uni_pred = uni_model.predict(scaled_features)
-    prog_pred = prog_model.predict(scaled_features)
+    # .predict() returns an array like [0.85], we need the float 0.85
+    uni_pred = uni_model.predict(scaled_features)[0]
+    prog_pred = prog_model.predict(scaled_features)[0]
     
     # 3. Average predictions
-    # Assuming single output for simplicity, or element-wise average
-    avg_predictions = [(u + p) / 2.0 for u, p in zip(uni_pred, prog_pred)]
+    avg_prediction = (uni_pred + prog_pred) / 2.0
     
-    return avg_predictions
+    return float(avg_prediction)

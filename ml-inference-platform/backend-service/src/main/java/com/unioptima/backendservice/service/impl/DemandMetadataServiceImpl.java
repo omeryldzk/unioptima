@@ -53,6 +53,10 @@ public class DemandMetadataServiceImpl implements DemandMetadataService {
         return cachedFeatures;
     }
 
+    @Override
+    public int getFeatureCount() {
+        return cachedFeatures.size();
+    }
     /**
      * High-performance check if an ID exists in the main list.
      */

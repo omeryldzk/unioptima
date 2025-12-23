@@ -4,20 +4,25 @@ from concurrent import futures
 import sys
 import os
 
-# Add parent directory to path so we can import generated protos if they are there
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# --- PATH CONFIGURATION ---
+# Get the directory where main.py is located (e.g., /service/app)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct path to the 'generated' folder (e.g., /service/app/generated)
+generated_dir = os.path.join(current_dir, "generated")
+
+# Add 'generated' to sys.path so Python can find 'inference_pb2'
+sys.path.append(generated_dir)
+# ---------------------------
 
 from app.config import settings
 from app.model_registry import ModelRegistry
 from app import base_ranking, demand
 
-# NOTE: these imports assume code generation has run
 try:
     import inference_pb2
     import inference_pb2_grpc
 except ImportError:
-    # Fallback for when protos aren't generated yet (to avoid immediate crashing during skeleton review)
-    # in production this should crash
     logging.warning("Proto files not found. Ensure protoc has been run.")
     inference_pb2 = None
     inference_pb2_grpc = None
@@ -25,12 +30,12 @@ except ImportError:
 class ModelServiceServicer(inference_pb2_grpc.ModelServiceServicer if inference_pb2_grpc else object):
     def PredictBaseRanking(self, request, context):
         try:
-            predictions = base_ranking.predict_ranking(
+            prediction = base_ranking.predict_ranking(
                 request.uni_cluster_id, 
                 request.prog_cluster_id, 
                 list(request.features)
             )
-            return inference_pb2.PredictionResponse(predictions=predictions)
+            return inference_pb2.PredictionResponse(prediction=prediction)
         except Exception as e:
             logging.error(f"Error in PredictBaseRanking: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -39,11 +44,11 @@ class ModelServiceServicer(inference_pb2_grpc.ModelServiceServicer if inference_
 
     def PredictDemand(self, request, context):
         try:
-            predictions = demand.predict_demand(
+            prediction = demand.predict_demand(
                 request.use_fallback, 
                 list(request.features)
             )
-            return inference_pb2.PredictionResponse(predictions=predictions)
+            return inference_pb2.PredictionResponse(prediction=prediction)
         except Exception as e:
             logging.error(f"Error in PredictDemand: {e}")
             context.set_code(grpc.StatusCode.INTERNAL)

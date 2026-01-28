@@ -1,0 +1,108 @@
+version: '3.8'
+
+networks:
+  ml-network:
+    driver: bridge
+
+services:
+  nginx-proxy:
+    image: nginx:1.25-alpine
+    container_name: nginx_proxy
+    ports:
+      - "80:80" # Exposes the proxy to the host machine on port 80.
+      - "443:443" # Ready for future SSL/HTTPS.
+    volumes:
+      # Mounts our central proxy configuration into the container.
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend-service
+    networks:
+      - ml-network
+    restart: unless-stopped
+  inference-service:
+    build:
+      context: .
+      dockerfile: inference-service/Dockerfile
+    ports:
+      - "8082:50051"
+    networks:
+      - ml-network
+    environment:
+      - ML_GRPC_PORT=50051
+      - ML_HF_TOKEN=${HF_TOKEN}
+      - ML_REPO_ID_BASE_RANKING=omeryldz/base-ranking
+      - ML_REPO_ID_DEMAND=omeryldz/demand_forecast
+      - ML_REPO_ID_DEMAND_FALLBACK=omeryldz/demand_forecast_fallback
+  typesense:
+    image: typesense/typesense:27.1 # Use specific version for stability
+    container_name: typesense-service
+    restart: on-failure
+    ports:
+      - "8108:8108" # Expose for local debugging or frontend access
+    volumes:
+      - ./typesense-data:/data # Persist index data
+    command: '--data-dir /data --api-key=xyz_typesense_api_key_123 --enable-cors'
+    networks:
+      - ml-network
+  backend-service:
+    build:
+      context: .
+      dockerfile: backend-service/Dockerfile
+    networks:
+      - ml-network
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb+srv://db_user_test:unioptimum123@cluster0.mg17igq.mongodb.net/university_db?appName=Cluster0
+      - INFERENCE_SERVICE_HOST=inference-service
+      - INFERENCE_SERVICE_PORT=50051
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - TYPESENSE_PROTOCOL=http
+      - TYPESENSE_HOST=typesense-service
+      - TYPESENSE_PORT=8108
+      - TYPESENSE_API_KEY=xyz_typesense_api_key_123
+    depends_on:
+      - inference-service
+      - typesense
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - ml-network
+    depends_on:
+      - backend-service
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./backend-service/docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend-service
+    networks:
+      - ml-network
+
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    depends_on:
+      - backend-service
+    networks:
+      - ml-network
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - backend-service
+    networks:
+      - ml-network

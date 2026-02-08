@@ -17,6 +17,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.typesense.api.Client;
 import org.typesense.api.FieldTypes;
+import org.typesense.api.exceptions.ObjectAlreadyExists;
+import org.typesense.api.exceptions.ObjectNotFound;
 import org.typesense.model.*;
 
 import java.util.ArrayList;
@@ -82,8 +84,12 @@ public class SearchServiceImpl implements SearchService {
         try {
             log.info("Checking if Typesense collection '{}' exists...", COLLECTION_NAME);
             client.collections(COLLECTION_NAME).retrieve();
-        } catch (Exception e) {
-            log.info("Collection '{}' does not exist. Creating new collection...", COLLECTION_NAME);
+        } catch (ObjectNotFound notFound) {
+            log.info("Collection '{}' not found. Creating...", COLLECTION_NAME);
+            // create below
+        }
+
+        log.info("Collection '{}' does not exist. Creating new collection...", COLLECTION_NAME);
             CollectionSchema collectionSchema = new CollectionSchema();
             collectionSchema.name(COLLECTION_NAME);
 
@@ -95,7 +101,12 @@ public class SearchServiceImpl implements SearchService {
             collectionSchema.addFieldsItem(new Field().name("scholarshipRate").type(FieldTypes.STRING).facet(true));
             collectionSchema.addFieldsItem(new Field().name("idOSYM").type(FieldTypes.STRING).facet(false));
 
+        try {
             client.collections().create(collectionSchema);
+            log.info("Collection '{}' created.", COLLECTION_NAME);
+        } catch (ObjectAlreadyExists ignore) {
+            // Handles race condition if multiple app instances start at same time
+            log.info("Collection '{}' already exists (race). Continuing.", COLLECTION_NAME);
         }
     }
 

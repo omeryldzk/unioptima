@@ -1,6 +1,5 @@
 package com.unioptima.backendservice.controller;
 
-
 import com.unioptima.backendservice.dto.SearchRequest;
 import com.unioptima.backendservice.dto.SearchResponseDto;
 import com.unioptima.backendservice.service.SearchService;
@@ -26,7 +25,5 @@ public class SearchController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-
 
 }

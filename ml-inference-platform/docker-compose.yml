@@ -30,7 +30,7 @@ services:
       - ml-network
     environment:
       - ML_GRPC_PORT=50051
-      - ML_HF_TOKEN=${HF_TOKEN}
+      - ML_HF_TOKEN=${ML_HF_TOKEN}
       - ML_REPO_ID_BASE_RANKING=omeryldz/base-ranking
       - ML_REPO_ID_DEMAND=omeryldz/demand_forecast
       - ML_REPO_ID_DEMAND_FALLBACK=omeryldz/demand_forecast_fallback
@@ -52,14 +52,14 @@ services:
     networks:
       - ml-network
     environment:
-      - SPRING_DATA_MONGODB_URI=mongodb+srv://db_user_test:unioptimum123@cluster0.mg17igq.mongodb.net/university_db?appName=Cluster0
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
       - INFERENCE_SERVICE_HOST=inference-service
       - INFERENCE_SERVICE_PORT=50051
       - LOKI_URL=http://loki:3100/loki/api/v1/push
       - TYPESENSE_PROTOCOL=http
       - TYPESENSE_HOST=typesense-service
       - TYPESENSE_PORT=8108
-      - TYPESENSE_API_KEY=xyz_typesense_api_key_123
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
     depends_on:
       - inference-service
       - typesense

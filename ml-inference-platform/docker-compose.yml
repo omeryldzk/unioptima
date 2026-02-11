@@ -26,6 +26,7 @@ services:
       dockerfile: inference-service/Dockerfile
     ports:
       - "8082:50051"
+    container_name: inference-service
     networks:
       - ml-network
     environment:

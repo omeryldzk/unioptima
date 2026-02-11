@@ -25,7 +25,7 @@ export const demandService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: idOSYM,
+            body: JSON.stringify({ idOSYM }),
         });
 
         if (!response.ok) {
@@ -53,7 +53,7 @@ export const baseRankingService = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: idOSYM,
+            body: JSON.stringify({ idOSYM }),
         });
 
         if (!response.ok) {

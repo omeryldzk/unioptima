@@ -50,6 +50,7 @@ services:
     build:
       context: .
       dockerfile: backend-service/Dockerfile
+    container_name: backend-service
     networks:
       - ml-network
     environment:
@@ -66,6 +67,7 @@ services:
       - typesense
 
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -76,6 +78,7 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
+    container_name: prometheus
     volumes:
       - ./backend-service/docker/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -87,6 +90,7 @@ services:
 
   loki:
     image: grafana/loki:latest
+    container_name: loki
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
@@ -97,6 +101,7 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     ports:

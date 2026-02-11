@@ -1,5 +1,6 @@
 package com.unioptima.backendservice.controller;
 
+import com.unioptima.backendservice.dto.PredictRequest;
 import com.unioptima.backendservice.service.BaseRankingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,9 @@ public class BaseRankingController {
         return ResponseEntity.ok(baseRankingService.getModelFeatures(idOSYM));
     }
 
-    @PostMapping("predict")
-    public ResponseEntity<Double> getModelPrediction(@RequestBody String idOSYM) {
-        return ResponseEntity.ok(baseRankingService.predictRanking(idOSYM));
+    @PostMapping("/predict")
+    public ResponseEntity<Double> getModelPrediction(@RequestBody PredictRequest req) {
+        return ResponseEntity.ok(baseRankingService.predictRanking(req.idOSYM().trim()));
     }
+
 }

@@ -1,5 +1,6 @@
 package com.unioptima.backendservice.controller;
 
+import com.unioptima.backendservice.dto.PredictRequest;
 import com.unioptima.backendservice.service.DemandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,8 @@ public class DemandController {
         return ResponseEntity.ok(demandService.getModelFeatures(idOSYM, null));
     }
 
-    @PostMapping("predict")
-    public ResponseEntity<Double> getModelPrediction(@RequestBody String idOSYM) {
-        return ResponseEntity.ok(demandService.predictDemand(idOSYM));
+    @PostMapping("/predict")
+    public ResponseEntity<Double> getModelPrediction(@RequestBody PredictRequest req) {
+        return ResponseEntity.ok(demandService.predictDemand(req.idOSYM().trim()));
     }
 }

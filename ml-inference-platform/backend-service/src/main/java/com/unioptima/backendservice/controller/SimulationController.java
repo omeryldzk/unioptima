@@ -2,6 +2,7 @@ package com.unioptima.backendservice.controller;
 
 
 import com.unioptima.backendservice.dto.SimulationRequest;
+import com.unioptima.backendservice.dto.SimulationResponse;
 import com.unioptima.backendservice.dto.SimulationResult;
 import com.unioptima.backendservice.service.SimulationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,11 @@ public class SimulationController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<SimulationResult> runSimulation(
+    public ResponseEntity<SimulationResponse> runSimulation(
             @RequestBody SimulationRequest request
     )
     {
-        SimulationResult result = simulationService.runQuotaOptimizationSimulation(request);
+        SimulationResponse result = simulationService.runQuotaOptimizationSimulation(request);
         return ResponseEntity.ok(result);
     }
 }

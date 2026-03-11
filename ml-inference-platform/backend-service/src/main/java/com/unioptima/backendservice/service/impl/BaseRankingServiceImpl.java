@@ -24,7 +24,6 @@ public class BaseRankingServiceImpl implements BaseRankingService {
 
     private static final Logger log = LoggerFactory.getLogger(BaseRankingServiceImpl.class);
 
-
     @GrpcClient("my-inference-service")
     private ModelServiceGrpc.ModelServiceBlockingStub modelServiceBlockingStub;
 
@@ -38,7 +37,7 @@ public class BaseRankingServiceImpl implements BaseRankingService {
     }
 
     @Override
-    public Double predictRanking(String idOSYM){
+    public Double predictRanking(String idOSYM) {
         String uniId = encodedDataRepository.findTopByIdStartingWithOrderByIdDesc(idOSYM + "_")
                 .map(data -> data.getExtraFields().get("university_cluster").toString())
                 .orElseThrow(() -> new ProgramNotFoundException("university_cluster not found for idOSYM: " + idOSYM));
@@ -68,8 +67,6 @@ public class BaseRankingServiceImpl implements BaseRankingService {
         return extractFeatureVector(doc, features);
     }
 
-
-
     private List<Double> extractFeatureVector(EncodedBaseRankingData doc, List<String> featureNames) {
         List<Double> vector = new ArrayList<>();
         var extraFields = doc.getExtraFields();
@@ -91,7 +88,8 @@ public class BaseRankingServiceImpl implements BaseRankingService {
 
             if (value == null) {
                 // Option A: Crash (safest for data integrity)
-                throw new ProgramNotFoundException("Missing required feature: " + feature + " for doc ID: " + doc.getId());
+                throw new ProgramNotFoundException(
+                        "Missing required feature: " + feature + " for doc ID: " + doc.getId());
             } else if (value instanceof Number) {
                 // SAFE CASTING: Works for Integer(10), Double(10.5), Long, Float
                 vector.add(((Number) value).doubleValue());
@@ -109,19 +107,17 @@ public class BaseRankingServiceImpl implements BaseRankingService {
     private double getPrediction(
             List<Double> featureVector,
             String uniId,
-            String programId
-    ) {
+            String programId) {
         validateInputs(featureVector, uniId, programId);
 
         log.info(
                 "Calling Inference Service | uniId={}, programId={}, features={}",
-                uniId, programId, featureVector
-        );
+                uniId, programId, featureVector);
 
         // Never mutate shared stubs
         var stub = modelServiceBlockingStub
                 .withWaitForReady()
-                .withDeadlineAfter(100, TimeUnit.SECONDS);
+                .withDeadlineAfter(14400, TimeUnit.SECONDS);
 
         BaseRankingRequest request = BaseRankingRequest.newBuilder()
                 .setUniClusterId(uniId)
@@ -141,8 +137,7 @@ public class BaseRankingServiceImpl implements BaseRankingService {
             log.error(
                     "Inference Service gRPC error | status={} description={}",
                     e.getStatus().getCode(),
-                    e.getStatus().getDescription()
-            );
+                    e.getStatus().getDescription());
             throw new InferenceServiceException("Inference service unavailable");
 
         } catch (Exception e) {
@@ -154,8 +149,7 @@ public class BaseRankingServiceImpl implements BaseRankingService {
     private void validateInputs(
             List<Double> featureVector,
             String uniId,
-            String programId
-    ) {
+            String programId) {
         if (featureVector == null || featureVector.isEmpty()) {
             throw new IllegalArgumentException("Feature vector must not be null or empty");
         }
@@ -163,8 +157,7 @@ public class BaseRankingServiceImpl implements BaseRankingService {
         if (featureVector.size() != metadataService.getFeatureCount()) {
             throw new IllegalArgumentException(
                     "Invalid feature count: expected "
-                            +  metadataService.getFeatureCount() + " but got " + featureVector.size()
-            );
+                            + metadataService.getFeatureCount() + " but got " + featureVector.size());
         }
 
         if (uniId == null || uniId.isBlank()) {

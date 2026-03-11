@@ -33,7 +33,9 @@ public class DemandServiceImpl implements DemandService {
 
     private final DemandMetadataService metadataService;
     private final EncodedDemandDataRepository encodedDataRepository;
-    public DemandServiceImpl(DemandMetadataService demandMetadataService, EncodedDemandDataRepository encodedDemandDataRepository) {
+
+    public DemandServiceImpl(DemandMetadataService demandMetadataService,
+            EncodedDemandDataRepository encodedDemandDataRepository) {
         this.metadataService = demandMetadataService;
         this.encodedDataRepository = encodedDemandDataRepository;
     }
@@ -45,7 +47,7 @@ public class DemandServiceImpl implements DemandService {
             throw new MetadataCacheException("BaseRanking metadata features are not loaded in cache.");
         }
         log.info("Extracting features: {} for idOSYM: {}", features, idOSYM);
-        var doc =  encodedDataRepository.findLatestWithSelectedFeatures(idOSYM, features);
+        var doc = encodedDataRepository.findLatestWithSelectedFeatures(idOSYM, features);
         log.info("Found document: {}", doc);
         if (doc == null) {
             throw new ProgramNotFoundException("No EncodedDemandData found for idOSYM: " + idOSYM);
@@ -55,28 +57,26 @@ public class DemandServiceImpl implements DemandService {
 
     @Override
     public Double predictDemand(String idOSYM) {
-       List<Double> features = getModelFeatures(idOSYM, null);
-       boolean use_fallback = !metadataService.isMainId(idOSYM);
-       if(use_fallback) {
-           log.info("Using fallback model for idOSYM: {}", idOSYM);
-       }
-       else {
-           log.info("Using main model for idOSYM: {}", idOSYM);
-       }
-       return getPrediction(features, use_fallback);
+        List<Double> features = getModelFeatures(idOSYM, null);
+        boolean use_fallback = !metadataService.isMainId(idOSYM);
+        if (use_fallback) {
+            log.info("Using fallback model for idOSYM: {}", idOSYM);
+        } else {
+            log.info("Using main model for idOSYM: {}", idOSYM);
+        }
+        return getPrediction(features, use_fallback);
     }
 
     @Override
     public Double predictDemandWithQuota(String idOSYM, Double quota) {
-       List<Double> features = getModelFeatures(idOSYM, quota);
-       boolean use_fallback = !metadataService.isMainId(idOSYM);
-        if(use_fallback) {
+        List<Double> features = getModelFeatures(idOSYM, quota);
+        boolean use_fallback = !metadataService.isMainId(idOSYM);
+        if (use_fallback) {
             log.info("Using fallback model for idOSYM: {}", idOSYM);
-        }
-        else {
+        } else {
             log.info("Using main model for idOSYM: {}", idOSYM);
         }
-       return getPrediction(features, use_fallback);
+        return getPrediction(features, use_fallback);
     }
 
     // Private helper methods
@@ -90,24 +90,20 @@ public class DemandServiceImpl implements DemandService {
             if (feature.equals("current_quota") && quota != null) {
                 // Override with provided quota
                 vector.add(quota);
-            }
-            else if (value == null) {
+            } else if (value == null) {
                 // DECISION: How do you handle missing data?
                 // Option A: Crash (safest for data integrity)
                 throw new ProgramNotFoundException("Missing required feature: " + feature);
 
                 // Option B: Default to 0.0 (safest for uptime, risky for accuracy)
                 // vector.add(0.0);
-            }
-            else if (value instanceof Number) {
+            } else if (value instanceof Number) {
                 // SAFE CASTING: Works for Integer(10), Double(10.5), Long, Float
                 vector.add(((Number) value).doubleValue());
-            }
-            else if (value instanceof Boolean) {
+            } else if (value instanceof Boolean) {
                 // Convert True -> 1.0, False -> 0.0
                 vector.add((Boolean) value ? 1.0 : 0.0);
-            }
-            else {
+            } else {
                 // Fallback for unexpected types (Strings, etc.)
                 throw new InvalidParamsException("Feature " + feature + " is not a number! Value: " + value);
             }
@@ -117,19 +113,17 @@ public class DemandServiceImpl implements DemandService {
 
     private double getPrediction(
             List<Double> featureVector,
-            boolean useFallback
-    ) {
+            boolean useFallback) {
         validateInputs(featureVector);
 
         log.info(
                 "Calling Inference Service | features={}",
-                 featureVector
-        );
+                featureVector);
 
         // Never mutate shared stubs
         var stub = modelServiceBlockingStub
                 .withWaitForReady()
-                .withDeadlineAfter(100, TimeUnit.SECONDS);
+                .withDeadlineAfter(14400, TimeUnit.SECONDS);
 
         DemandRequest request = DemandRequest.newBuilder()
                 .addAllFeatures(featureVector)
@@ -148,8 +142,7 @@ public class DemandServiceImpl implements DemandService {
             log.error(
                     "Inference Service gRPC error | status={} description={}",
                     e.getStatus().getCode(),
-                    e.getStatus().getDescription()
-            );
+                    e.getStatus().getDescription());
             throw new InferenceServiceException("Inference service unavailable");
 
         } catch (Exception e) {
@@ -159,8 +152,7 @@ public class DemandServiceImpl implements DemandService {
     }
 
     private void validateInputs(
-            List<Double> featureVector
-    ) {
+            List<Double> featureVector) {
         if (featureVector == null || featureVector.isEmpty()) {
             throw new IllegalArgumentException("Feature vector must not be null or empty");
         }
@@ -168,12 +160,8 @@ public class DemandServiceImpl implements DemandService {
         if (featureVector.size() != metadataService.getFeatureCount()) {
             throw new IllegalArgumentException(
                     "Invalid feature count: expected "
-                            +  metadataService.getFeatureCount() + " but got " + featureVector.size()
-            );
+                            + metadataService.getFeatureCount() + " but got " + featureVector.size());
         }
     }
-
-
-
 
 }

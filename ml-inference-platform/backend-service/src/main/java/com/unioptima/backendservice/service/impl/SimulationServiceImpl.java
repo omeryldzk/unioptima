@@ -1,6 +1,7 @@
 package com.unioptima.backendservice.service.impl;
 
 import com.unioptima.backendservice.dto.SimulationRequest;
+import com.unioptima.backendservice.dto.SimulationResponse;
 import com.unioptima.backendservice.dto.SimulationResult;
 import com.unioptima.backendservice.dto.SimulationStep;
 import com.unioptima.backendservice.exceptions.InvalidParamsException;
@@ -36,7 +37,7 @@ public class SimulationServiceImpl implements SimulationService {
     }
 
     @Override
-    public SimulationResult runQuotaOptimizationSimulation(SimulationRequest request) {
+    public SimulationResponse runQuotaOptimizationSimulation(SimulationRequest request) {
         String idOSYM = request.idOSYM();
         double minQuota = request.minQuota();
         double maxQuota = request.maxQuota();
@@ -72,9 +73,9 @@ public class SimulationServiceImpl implements SimulationService {
         // 2. Select Parameters Dynamically
         // X: Controls how fast we reach saturation.
         // We want X to be smaller when quality is low to widen the linear range of tanh.
-        double powerParameterX = 0.05;
+        double powerParameterX = 0.2;
 
-        double powerParameterY = 1;
+        double powerParameterY = 0.2;
 
         if(universityType.equals("devlet")){
             throw new UniversityTypeException("Simulation not supported for 'devlet' university type for idOSYM: " + idOSYM);
@@ -97,6 +98,8 @@ public class SimulationServiceImpl implements SimulationService {
         // Return "one step before result" if threshold exceeded.
 
         SimulationResult bestResult = null;
+        List<SimulationStep> simulationSteps = new java.util.ArrayList<>();
+        SimulationStep simulationStep;
         double powerTerm ;
         log.info("Running simulation for idOSYM: {} with RawData: {}", idOSYM, rawData);
         for (double currentQuota = minQuota; currentQuota <= maxQuota; currentQuota += 1.0) {
@@ -140,7 +143,7 @@ public class SimulationServiceImpl implements SimulationService {
                 // If it fails on the very first step, bestResult might be null.
                 // The prompt says "abort to one step before".
                 if (bestResult != null) {
-                    return bestResult;
+                    return new SimulationResponse(simulationSteps, bestResult);
                 } else {
                     // First step already exceeded threshold.
                     // Return the current one? Or Empty?
@@ -152,6 +155,8 @@ public class SimulationServiceImpl implements SimulationService {
             }
             // 5. Check  demand vs occupied slots for best result
             int simulatedOccupiedSlots = (int) Math.round(currentOccupiedSlot);
+            simulationStep = new SimulationStep(currentQuota, simBaseRanking, predictedDemand, currentOccupiedSlot);
+            simulationSteps.add(simulationStep);
             if (bestResult != null) {
                 int bestOccupiedSlots = bestResult.predictedDemand();
                 if (simulatedOccupiedSlots <= bestOccupiedSlots) {
@@ -163,8 +168,8 @@ public class SimulationServiceImpl implements SimulationService {
             log.info("Current Best Result: {}", bestResult);
         }
 
-        // If we finish the loop without exceeding, return the last result
-        return bestResult;
+        // If we finish the loop without exceeding, return the last result and simulation steps
+        return new SimulationResponse(simulationSteps,bestResult);
     }
 
     private Double getDoubleFromExtra(com.unioptima.backendservice.model.RawData data, String key) {
@@ -276,7 +281,7 @@ public class SimulationServiceImpl implements SimulationService {
             }
 
             // Update best result (this step is valid)
-            resultStep = new SimulationStep(idOSYM, currentQuota, simBaseRanking, predictedDemand, currentOccupiedSlot);
+            resultStep = new SimulationStep(currentQuota, simBaseRanking, predictedDemand, currentOccupiedSlot);
             log.info("Current Best Result: {}", resultStep);
             results.add(resultStep);
         }

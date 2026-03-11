@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
-
 @Service
 public class SimulationTestServiceImpl implements SimulationTestService {
 
@@ -27,20 +26,21 @@ public class SimulationTestServiceImpl implements SimulationTestService {
     private final SimTestDataRepository simTestDataRepository;
 
     // Range to search for X
-    private static final double MIN_VAL_X = 0.5;
-    private static final double MAX_VAL_X = 1.5;
+    private static final double MIN_VAL_X = 0.05;
+    private static final double MAX_VAL_X = 0.2;
 
-    private static final double MIN_VAL_Y = 0.3;
-    private static final double MAX_VAL_Y = 0.5;
-    private static final double STEP_X = 0.25;
+    private static final double MIN_VAL_Y = 0.05;
+    private static final double MAX_VAL_Y = 0.2;
+    private static final double STEP_X = 0.05;
 
-    private static final double STEP_Y = 0.1;
+    private static final double STEP_Y = 0.05;
 
     // Weight Constants
-    private static final double WEIGHT_DEMAND = 0.1;
+    private static final double WEIGHT_DEMAND = 0.2;
     private static final double WEIGHT_RANKING = 1.0 - WEIGHT_DEMAND;
 
-    public SimulationTestServiceImpl(SimulationServiceImpl simulationService, SimTestDataRepository simTestDataRepository) {
+    public SimulationTestServiceImpl(SimulationServiceImpl simulationService,
+            SimTestDataRepository simTestDataRepository) {
         this.simulationService = simulationService;
         this.simTestDataRepository = simTestDataRepository;
     }
@@ -48,24 +48,27 @@ public class SimulationTestServiceImpl implements SimulationTestService {
     @Override
     public List<SimulationTestStep> findBestParameter() {
         List<SimTestData> testDataList = simTestDataRepository.findAll();
-        if (testDataList.isEmpty()) return new ArrayList<>();
+        if (testDataList.isEmpty())
+            return new ArrayList<>();
 
         // 1. Pre-calculate averages
         final double avgActualDemand = getAverage(testDataList, SimTestData::getOccupiedSlots);
         final double avgActualRanking = getAverage(testDataList, SimTestData::getBaseRanking);
 
         // 2. Generate list of (X, Y) pairs to test
-        // We create a flattened list of all combinations to maximize parallel efficiency
+        // We create a flattened list of all combinations to maximize parallel
+        // efficiency
         List<double[]> parameterPairs = new ArrayList<>();
         for (double x = MIN_VAL_X; x <= MAX_VAL_X; x += STEP_X) {
             for (double y = MIN_VAL_Y; y <= MAX_VAL_Y; y += STEP_Y) {
-                parameterPairs.add(new double[]{x, y});
+                parameterPairs.add(new double[] { x, y });
             }
         }
 
         // 3. Execute in Parallel
         List<SimulationTestStep> results = parameterPairs.parallelStream()
-                .map(pair -> calculateStepForParameters(pair[0], pair[1], testDataList, avgActualDemand, avgActualRanking))
+                .map(pair -> calculateStepForParameters(pair[0], pair[1], testDataList, avgActualDemand,
+                        avgActualRanking))
                 .filter(Objects::nonNull) // Filter out failed runs
                 .collect(Collectors.toList());
 
@@ -84,7 +87,7 @@ public class SimulationTestServiceImpl implements SimulationTestService {
      * Helper to calculate cost for a specific (X, Y) pair.
      */
     private SimulationTestStep calculateStepForParameters(double x, double y, List<SimTestData> testDataList,
-                                                          double avgActualDemand, double avgActualRanking) {
+            double avgActualDemand, double avgActualRanking) {
         double totalSquaredErrorDemand = 0.0;
         double totalSquaredErrorRanking = 0.0;
         int n = 0;
@@ -92,10 +95,10 @@ public class SimulationTestServiceImpl implements SimulationTestService {
         for (SimTestData testData : testDataList) {
             // Updated to pass both x and y to the simulation service
             List<SimulationStep> steps = simulationService.runQuotaOptimizationSimulationTest(
-                    testData.toSimulationRequest(), x, y
-            );
+                    testData.toSimulationRequest(), x, y);
 
-            if (steps.isEmpty()) continue;
+            if (steps.isEmpty())
+                continue;
 
             SimulationStep testStep = findStepByQuota(steps, testData.getQuota());
 
@@ -112,7 +115,8 @@ public class SimulationTestServiceImpl implements SimulationTestService {
             }
         }
 
-        if (n == 0) return null;
+        if (n == 0)
+            return null;
 
         // Calculate RMSE
         double rmseDemand = Math.sqrt(totalSquaredErrorDemand / n);
@@ -127,7 +131,8 @@ public class SimulationTestServiceImpl implements SimulationTestService {
                 (WEIGHT_RANKING * normalizedRankingError);
 
         // Return result including both X and Y
-        return new SimulationTestStep(x, y, totalCost, rmseRanking, rmseDemand, normalizedRankingError, normalizedDemandError);
+        return new SimulationTestStep(x, y, totalCost, rmseRanking, rmseDemand, normalizedRankingError,
+                normalizedDemandError);
     }
 
     /**

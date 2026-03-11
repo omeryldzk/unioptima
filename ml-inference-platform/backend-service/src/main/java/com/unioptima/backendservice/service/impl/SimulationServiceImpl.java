@@ -73,9 +73,9 @@ public class SimulationServiceImpl implements SimulationService {
         // 2. Select Parameters Dynamically
         // X: Controls how fast we reach saturation.
         // We want X to be smaller when quality is low to widen the linear range of tanh.
-        double powerParameterX = 0.2;
+        double powerParameterX = 0.01;
 
-        double powerParameterY = 0.2;
+        double powerParameterY = 0.5;
 
         if(universityType.equals("devlet")){
             throw new UniversityTypeException("Simulation not supported for 'devlet' university type for idOSYM: " + idOSYM);
@@ -124,7 +124,6 @@ public class SimulationServiceImpl implements SimulationService {
             else {
                 powerTerm = Math.exp(powerParameterY * deltaSlotSat / qualityFactor);
             }
-            powerTerm = Math.max(powerTerm, 0.1); // Clamp to 0.1 min
 
             log.info("Power Term {} ", powerTerm);
             log.info("P and U values: {} , {} ", P, U);

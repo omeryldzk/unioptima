@@ -123,7 +123,7 @@ public class DemandServiceImpl implements DemandService {
         // Never mutate shared stubs
         var stub = modelServiceBlockingStub
                 .withWaitForReady()
-                .withDeadlineAfter(14400, TimeUnit.SECONDS);
+                .withDeadlineAfter(5, TimeUnit.SECONDS);
 
         DemandRequest request = DemandRequest.newBuilder()
                 .addAllFeatures(featureVector)

@@ -7,7 +7,11 @@ WORKDIR /service
 # 1. Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    wget \
     && rm -rf /var/lib/apt/lists/*
+
+RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.34/grpc_health_probe-linux-amd64 && \
+    chmod +x /bin/grpc_health_probe
 
 # 2. Install Python dependencies
 # We now copy from 'inference-service/' because context is at the root

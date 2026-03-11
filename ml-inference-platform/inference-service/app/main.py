@@ -3,6 +3,11 @@ import grpc
 from concurrent import futures
 import sys
 import os
+# --- 1. IMPORT HEALTH CHECK MODULES ---
+from grpc_health.v1 import health
+from grpc_health.v1 import health_pb2
+from grpc_health.v1 import health_pb2_grpc
+
 
 # --- PATH CONFIGURATION ---
 # Get the directory where main.py is located (e.g., /service/app)
@@ -68,6 +73,14 @@ def serve():
     
     # Initialize models
     ModelRegistry()
+
+    # --- 2. CREATE AND REGISTER THE HEALTH SERVICER ---
+    health_servicer = health.HealthServicer()
+    health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
+    
+    # --- 3. MARK THE SERVER AS HEALTHY (SERVING) ---
+    # The empty string "" represents the overall status of the gRPC server
+    health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
     
     address = f"[::]:{settings.grpc_port}"
     server.add_insecure_port(address)
